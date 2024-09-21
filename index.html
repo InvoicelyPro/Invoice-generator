@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factuurgenerator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* Basisstijl voor de hele pagina */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Titelstijl */
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #333;
+        }
+
+        /* Formulierstijl */
+        form {
+            max-width: 600px; /* Maximale breedte voor grote schermen */
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        /* Stijl voor labels en invoervelden */
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #333;
+        }
+
+        input, textarea {
+            width: 100%; /* Volledige breedte voor invoervelden en textarea */
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        /* Knopstijl */
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%; /* Knop heeft volledige breedte op kleinere schermen */
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        /* Responsieve aanpassingen voor schermen kleiner dan 600px */
+        @media (max-width: 600px) {
+            form {
+                padding: 10px; /* Minder padding op mobiele schermen */
+            }
+
+            input, textarea {
+                font-size: 14px; /* Kleiner lettertype voor kleinere schermen */
+                padding: 8px;
+            }
+
+            button {
+                font-size: 14px; /* Kleiner lettertype voor de knop */
+                padding: 12px 24px; /* Grotere, klikbare knop op mobiele apparaten */
+            }
+
+            h1 {
+                font-size: 1.5rem; /* Kleinere koptekst op mobiele schermen */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Basis Factuurgenerator</h1>
+
+    <form id="invoice-form">
+        <label for="company-name">Bedrijfsnaam:</label>
+        <input type="text" id="company-name" placeholder="Voer uw bedrijfsnaam in">
+
+        <label for="client-name">Klantnaam:</label>
+        <input type="text" id="client-name" placeholder="Voer de naam van de klant in">
+
+        <label for="client-address">Klantadres:</label>
+        <textarea id="client-address" placeholder="Voer het adres van de klant in"></textarea>
+
+        <label for="invoice-items">Beschrijving van de producten/diensten:</label>
+        <textarea id="invoice-items" placeholder="Bijv. 2 uur advies, 3x product A"></textarea>
+
+        <label for="total-amount">Totaalbedrag (€):</label>
+        <input type="number" id="total-amount" placeholder="Voer het totaalbedrag in">
+
+        <!-- Voeg logo-uploadoptie toe -->
+        <label for="logo-upload">Upload bedrijfslogo:</label>
+        <input type="file" id="logo-upload" accept="image/*"><br><br>
+
+        <!-- Voeg invoervelden toe voor contactgegevens -->
+        <label for="contact-email">E-mail:</label>
+        <input type="email" id="contact-email" placeholder="Voer uw e-mail in"><br>
+
+        <label for="contact-phone">Telefoonnummer:</label>
+        <input type="text" id="contact-phone" placeholder="Voer uw telefoonnummer in"><br>
+
+        <button type="button" onclick="generateInvoice()">Genereer Factuur</button>
+    </form>
+
+    <script>
+        function generateInvoice() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Haal gegevens op uit het formulier
+            const companyName = document.getElementById('company-name').value;
+            const clientName = document.getElementById('client-name').value;
+            const clientAddress = document.getElementById('client-address').value;
+            const invoiceItems = document.getElementById('invoice-items').value;
+            const totalAmount = document.getElementById('total-amount').value;
+            const contactEmail = document.getElementById('contact-email').value;
+            const contactPhone = document.getElementById('contact-phone').value;
+
+            // Voeg tekst toe aan de PDF
+            doc.setFontSize(16);
+            doc.text("Factuur", 10, 10);
+            doc.setFontSize(12);
+            doc.text("Bedrijfsnaam: " + companyName, 10, 20);
+            doc.text("Klantnaam: " + clientName, 10, 30);
+            doc.text("Klantadres: " + clientAddress, 10, 40);
+            doc.text("Beschrijving: " + invoiceItems, 10, 50);
+            doc.text("Totaalbedrag: €" + totalAmount, 10, 60);
+
+            // Voeg contactgegevens toe aan de PDF
+            doc.text("Contactgegevens:", 10, 80);
+            doc.text("E-mail: " + contactEmail, 10, 90);
+            doc.text("Telefoonnummer: " + contactPhone, 10, 100);
+
+            // Voeg bedrijfslogo toe, indien beschikbaar
+            const logoInput = document.getElementById('logo-upload');
+            if (logoInput.files && logoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgData = e.target.result;  // Base64-afbeelding van het logo
+                    doc.addImage(imgData, 'PNG', 150, 10, 50, 20);  // Voeg logo toe aan de PDF (x=150, y=10)
+                    doc.save("factuur.pdf");  // Sla de PDF op nadat het logo is toegevoegd
+                };
+                reader.readAsDataURL(logoInput.files[0]);  // Lees het logo als base64
+            } else {
+                // Geen logo geüpload, sla de PDF direct op
+                doc.save("factuur.pdf");
+            }
+        }
+    </script>
+
+</body>
+</html>
